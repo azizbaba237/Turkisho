@@ -1,0 +1,81 @@
+{% load static tailwind_tags %}
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+    {% load static %} 
+    {% tailwind_css %} <!-- Load Tailwind CSS -->
+  </head>
+  <body>
+    <!-- Navbar -->
+    {% include 'nav.html' %}
+
+    <!-- Main content container -->
+    <div class="container mx-auto">
+      {% block content %} 
+      {% endblock %}
+    </div>
+
+    
+
+    <script type="text/javascript">
+      // Define the current user
+      var user = {
+          id: "{{ request.user.id }}",
+          username: "{{ request.user.username }}",
+          is_authenticated: "{{ request.user.is_authenticated|lower }}" // Convert to lowercase for JavaScript
+      };
+    
+      // Function to get the CSRF token
+      function getToken(name) {
+          var cookieValue = null;
+          if (document.cookie && document.cookie !== '') {
+              var cookies = document.cookie.split(';');
+              for (var i = 0; i < cookies.length; i++) {
+                  var cookie = cookies[i].trim();
+                  if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                      cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                      break;
+                  }
+              }
+          }
+          return cookieValue;
+      }
+    
+      // Get the CSRF token
+      var csrftoken = getToken('csrftoken');
+    
+      // Function to get a cookie by name
+      function getCookie(name) {
+          var cookieArr = document.cookie.split(";");
+          for (var i = 0; i < cookieArr.length; i++) {
+              var cookiePair = cookieArr[i].split("=");
+              if (name == cookiePair[0].trim()) {
+                  return decodeURIComponent(cookiePair[1]);
+              }
+          }
+          return null;
+      }
+    
+      // Get or create the 'cart' cookie
+      var cart = JSON.parse(getCookie('cart') || {})
+      console.log('Cart:', cart);
+    
+      // If the cart is empty, initialize the cookie
+      if (Object.keys(cart).length === 0) {
+          console.log('Cart Created!', cart);
+          document.cookie = 'cart=' + JSON.stringify(cart) + ";domain=;path=/";
+      }
+    </script>
+
+  <!-- Load the cart.js file after defining the variables -->
+  <script type="text/javascript" src="{% static 'js/cart.js' %}"></script>
+
+  <!-- Footer -->
+  {% include 'footer.html' %}
+
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+  </body>
+</html>

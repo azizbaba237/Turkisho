@@ -1,0 +1,20 @@
+{
+  "name": "turkishomri",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "@vitejs/plugin-react": "^4.3.4",
+    "lucide-react": "^0.485.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "turkishomri": "file:",
+    "vite": "^6.2.3"
+  }
+}

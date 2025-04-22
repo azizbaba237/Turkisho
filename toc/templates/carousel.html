@@ -1,0 +1,77 @@
+{% load static %}
+<div class="w-full h-[400px] relative overflow-hidden">
+    {% if carousel_items %}
+        <div id="carousel" class="w-full h-full">
+            {% for item in carousel_items %}
+                <div class="carousel-item absolute w-full h-full transition-opacity duration-700 ease-in-out {% if forloop.first %}opacity-100{% else %}opacity-0{% endif %}" data-carousel-index="{{ forloop.counter0 }}">
+                    <img src="{{ item.image.url }}" class="w-full h-full object-cover" alt="{{ item.title }}">
+                    
+                    <div class="absolute inset-x-0 bottom-0 bg-black bg-opacity-50 text-white p-4">
+                        <h2 class="text-2xl font-bold uppercase">{{ item.title }}</h2>
+                        <p class="mt-2">{{ item.description }}</p>
+                    </div>
+                </div>
+            {% endfor %}
+
+            <button class="carousel-control-prev absolute top-1/2 left-4 transform -translate-y-1/2 bg-black bg-opacity-50 p-2 rounded-full">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                </svg>
+            </button>
+
+            <button class="carousel-control-next absolute top-1/2 right-4 transform -translate-y-1/2 bg-black bg-opacity-50 p-2 rounded-full">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                </svg>
+            </button>
+        </div>
+    {% endif %}
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const carouselItems = document.querySelectorAll('.carousel-item');
+    const prevButton = document.querySelector('.carousel-control-prev');
+    const nextButton = document.querySelector('.carousel-control-next');
+    let currentIndex = 0;
+    const itemCount = carouselItems.length;
+    
+    function showSlide(index) {
+        carouselItems.forEach(item => {
+            item.classList.remove('opacity-100');
+            item.classList.add('opacity-0');
+        });
+        
+        carouselItems[index].classList.remove('opacity-0');
+        carouselItems[index].classList.add('opacity-100');
+        currentIndex = index;
+    }
+    
+    prevButton.addEventListener('click', function() {
+        const newIndex = (currentIndex - 1 + itemCount) % itemCount;
+        showSlide(newIndex);
+    });
+    
+    nextButton.addEventListener('click', function() {
+        const newIndex = (currentIndex + 1) % itemCount;
+        showSlide(newIndex);
+    });
+    
+    let interval = setInterval(function() {
+        const newIndex = (currentIndex + 1) % itemCount;
+        showSlide(newIndex);
+    }, 5000);
+    
+    document.getElementById('carousel').addEventListener('mouseenter', function() {
+        clearInterval(interval);
+    });
+    
+    document.getElementById('carousel').addEventListener('mouseleave', function() {
+        interval = setInterval(function() {
+            const newIndex = (currentIndex + 1) % itemCount;
+            showSlide(newIndex);
+        }, 5000);
+    });
+});
+</script>
+
