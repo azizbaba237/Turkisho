@@ -1,9 +1,9 @@
 {% load static tailwind_tags %}
 <nav class="bg-slate-300 shadow-md">
   <div class="container mx-auto px-4">
-    <div class="flex justify-between items-center h-16">
-      <!-- Logo -->
-      <div class="flex-shrink-0">
+    <div class="flex justify-end items-center h-16 py-4 sm:flex sm:justify-between sm:items-center">
+      <!-- Logo - Hidden on mobile -->
+      <div class="flex-shrink-0 hidden sm:block">
         <a
           class="text-xl font-bold text-gray-800 hover:text-gray-600 transition-colors"
           href="{% url 'index' %}"
@@ -168,22 +168,22 @@
         >Home</a
       >
       <a
-        href="#"
+        href="{% url 'services' %}"
         class="block px-3 py-2 rounded-md text-base font-medium text-gray-800 hover:bg-gray-200"
         >Services</a
       >
       <a
-        href="#"
+        href="{% url 'product' %}"
         class="block px-3 py-2 rounded-md text-base font-medium text-gray-800 hover:bg-gray-200"
         >Products</a
       >
       <a
-        href="#"
+        href="{% url 'about' %}"
         class="block px-3 py-2 rounded-md text-base font-medium text-gray-800 hover:bg-gray-200"
         >About</a
       >
       <a
-        href="#"
+        href="{% url 'contact' %}"
         class="block px-3 py-2 rounded-md text-base font-medium text-gray-800 hover:bg-gray-200"
         >Contact</a
       >

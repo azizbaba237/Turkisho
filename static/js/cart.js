@@ -1,59 +1,55 @@
-// Sélectionner tous les boutons "Ajouter au panier" ou "Mettre à jour le panier"
+// Get all add-to-cart buttons
 var updateBtns = document.getElementsByClassName('update-cart');
 
-// Boucle pour ajouter un écouteur d'événement à chaque bouton
+// Add click event listener to each button
 for (var i = 0; i < updateBtns.length; i++) {
-    updateBtns[i].addEventListener('click', function () {
-        var productId = this.dataset.product; // Récupérer l'ID du produit
-        var action = this.dataset.action; // Récupérer l'action (ajouter/supprimer)
+    updateBtns[i].addEventListener('click', function(e) {
+        e.preventDefault(); // Prevent form submission and page reload
+        
+        var productId = this.dataset.product;
+        var action = this.dataset.action;
+        
         console.log('productId:', productId, 'Action:', action);
-
-        // Vérifier si l'utilisateur est authentifié
-        if (user.is_authenticated === "false") { // Correction : Vérifier si l'utilisateur est non connecté
-            console.log('User is not authenticated');
-            addCookieItem(productId, action); // Appeler addCookieItem pour les utilisateurs non connectés
-        } else {
-            // Mettre à jour la commande de l'utilisateur
+        
+        // Check if user is authenticated
+        if (user.is_authenticated === "true") {
             updateUserOrder(productId, action);
+        } else {
+            updateCookieCart(productId, action);
         }
     });
 }
 
-// Fonction pour mettre à jour la commande de l'utilisateur via une requête AJAX
+// Function to update order for authenticated users
 function updateUserOrder(productId, action) {
     console.log('User is authenticated, sending data...');
 
-    var url = '/update_item/'; // URL de l'endpoint Django
+    var url = '/update_item/';
+
     fetch(url, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
-            'X-CSRFToken': csrftoken // Token CSRF pour la sécurité
+            'X-CSRFToken': csrftoken,
         },
-        body: JSON.stringify({ 'productId': productId, 'action': action }) // Données à envoyer
+        body: JSON.stringify({'productId': productId, 'action': action})
     })
     .then((response) => {
-        if (!response.ok) {
-            throw new Error('Network response was not ok');
-        }
         return response.json();
     })
     .then((data) => {
-        console.log('Success:', data);
-        location.reload(); // Recharger la page (optionnel)
-    })
-    .catch((error) => {
-        console.error('Error:', error);
+        console.log('Data:', data);
+        // Update cart item count or visual feedback without reloading
+        location.reload(); // Optional: remove this line to prevent page reload
+        // Instead, update the cart UI dynamically
+        updateCartUI(data);
     });
 }
 
-// Fonction pour ajouter ou mettre à jour un article dans le cookie du panier
-function addCookieItem(productId, action) {
-    console.log('User is not authenticated...');
-
-    // Récupérer le cookie 'cart' ou créer un nouvel objet si le cookie n'existe pas
-    var cart = JSON.parse(getCookie('cart') || '{}');
-
+// Function to update cart for non-authenticated users using cookies
+function updateCookieCart(productId, action) {
+    console.log('User is not authenticated');
+    
     if (action == 'add') {
         if (cart[productId] == undefined) {
             cart[productId] = {'quantity': 1};
@@ -61,17 +57,63 @@ function addCookieItem(productId, action) {
             cart[productId]['quantity'] += 1;
         }
     }
-
+    
     if (action == 'remove') {
         cart[productId]['quantity'] -= 1;
-
+        
         if (cart[productId]['quantity'] <= 0) {
-            console.log('Item should be deleted');
             delete cart[productId];
         }
     }
+    
+    console.log('Cart:', cart);
+    document.cookie = 'cart=' + JSON.stringify(cart) + ";domain=;path=/";
+    
+    // Update the cart UI without refreshing the page
+    updateCartUI();
+}
 
-    console.log('CART:', cart);
-    document.cookie = 'cart=' + JSON.stringify(cart) + ";domain=;path=/"; // Définir le cookie
-    location.reload(); // Recharger la page pour mettre à jour l'affichage
+// Function to update the cart UI without page reload
+function updateCartUI(data) {
+    // Update cart icon or counter
+    var cartCount = document.getElementById('cart-count');
+    if (cartCount) {
+        // If you have data from the server, use it
+        if (data && data.cartItems) {
+            cartCount.textContent = data.cartItems;
+        } else {
+            // Otherwise calculate from cookie
+            let itemCount = 0;
+            for (const id in cart) {
+                itemCount += cart[id]['quantity'];
+            }
+            cartCount.textContent = itemCount;
+        }
+    }
+    
+    // Add a visual feedback that the item was added to cart
+    showNotification('Product added to cart!');
+}
+
+// Function to show a brief notification
+function showNotification(message) {
+    // Create notification element if it doesn't exist
+    var notification = document.getElementById('cart-notification');
+    if (!notification) {
+        notification = document.createElement('div');
+        notification.id = 'cart-notification';
+        notification.className = 'fixed top-4 right-4 bg-green-500 text-white py-2 px-4 rounded-lg shadow-lg opacity-0 transition-opacity duration-300';
+        document.body.appendChild(notification);
+    }
+    
+    // Update and show notification
+    notification.textContent = message;
+    notification.classList.remove('opacity-0');
+    notification.classList.add('opacity-100');
+    
+    // Hide notification after 3 seconds
+    setTimeout(function() {
+        notification.classList.remove('opacity-100');
+        notification.classList.add('opacity-0');
+    }, 3000);
 }

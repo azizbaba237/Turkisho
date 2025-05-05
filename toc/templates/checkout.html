@@ -1,225 +1,235 @@
 {% extends 'base.html' %}
-<script type="text/javascript">
-  var shipping = '{{order.shipping}}'
-  var total = '{{order.get_cart_total|floatformat:2}}'
-
-  if (shipping == false ){
-    document.getElementById('shipping-info').innerHTML = ''
-  }
-
-  if (user.is_authenticated === 'True'){
-		 	document.getElementById('user-info').innerHTML = ''
-		 }
-
-		if (shipping == 'False' && user != 'AnonymousUser'){
-			//Hide entire form if user is logged in and shipping is false
-				document.getElementById('form-wrapper').classList.add("hidden");
-				//Show payment if logged in user wants to buy an item that does not require shipping
-			    document.getElementById('payment-info').classList.remove("hidden");
-		}
-
-  var form = document.getElementById('form')
-  form.addEventListener('submit', function(e){
-    e.preventDefault()
-    console.log("Form submited....");
-    document.getElementById('form-button').classList.add("hidden")
-    document.getElementById('payment-info').classList.remove("hidden")
-    
-  })
-
-  function submitFormData(e){
-    var userFormData = {
-      'name':null,
-      'email':null,
-      'total':total
-    }
-
-    var shippingInfo = {
-      'address':null,
-      'city':null,
-      'state':null,
-      'zipcode':null
-    }
-    
-    if (shipping != 'Flase'){
-      shippingInfo.address = form.address.value
-      shippingInfo.city = form.city.value
-      shippingInfo.state = form.state.value
-      shippingInfo.zipcode = form.zipcode.value
-    }
-
-    if (user.is_authenticated !== 'True'){
-      userFormData.name = form.name.value
-      userFormData.email = form.email.value
-    }
-
-    console.log('shipping info', shippingInfo);
-    console.log('User info', userFormData);
-    
-  }
-
-  var url = '/process_order/'
-  fetch( url, {
-    method: 'POST',
-    headers: {
-      'Content-Type':'application/json',
-      'X-CSRFToken':csrftoken,
-    },
-    body:JSON.stringify({'form':userFormData, 'shipping':shippingInfo}),
-  })
-  .then((response)=>response.json())
-  .then((data)=>{
-    console.log('success', data)
-    alert('Transaction complete')
-
-    // clear cart when our payment button/form is successfully submitted.
-    cart = {}
-    document.cookie = 'cart' + json.stringify(cart) + ";domain=;path=/"
-    
-    window.location.href="{% url 'index' %}"
-    
-  })
-
-
-</script>
-
 {% load static %}
-{% block content %}
 
-<div class="lg:flex lg:justify-around mt-8">
-  <!-- Left block -->
-  <div>
-   <form action="" id="form">
-      <div class="border-2 p-4 shadow-xl">
-         <!-- left block up -->
-         <div class="">
-            <input type="text" placeholder="Name..." require name="name" class="mr-2 rounded-lg">
-            <input type="text" placeholder="Email..." require name="email" class="rounded-lg">
-         </div>
-         <hr class="my-4">
-         <p class="my-4">Shipping Information:</p>
-         <hr class="my-4">
-         <div>
-            <div class="flex">
-               <input type="text" placeholder="Address..." class="mr-2 rounded-lg mb-2">
-               <input type="text" placeholder="City..." class="rounded-lg mb-2">
-            </div>
-            <div class="flex">
-               <input type="text" placeholder="State..." name="state" class="mr-2 rounded-lg mb-2">
-               <input type="text" placeholder="Zip code..." name="zipcode" class="rounded-lg mb-2" >
-            </div>
-         </div>
-         <div class=" bg-green-500 lg:justify-center lg:items-center lg:flex rounded-lg my-4">
-            <input type="submit" value="Continue" class="text-xl py-1">
-         </div>
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+  <div class="flex flex-col lg:flex-row gap-8">
+    <!-- Right Column - Order Summary -->
+    <div class="lg:w-1/2">
+      <div class="bg-white rounded-lg shadow-lg p-6">
+        <a href="{% url 'cart' %}" class="text-green-600 hover:text-green-800 font-medium flex items-center">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clip-rule="evenodd" />
+          </svg>
+          Back to Cart
+        </a>
+        
+        <h2 class="text-2xl font-bold mt-4 mb-6 text-gray-800">Order Summary</h2>
+        
+        <div class="overflow-x-auto">
+          <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+              <tr>
+                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Product</th>
+                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Price</th>
+                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Qty</th>
+              </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+              {% for item in items %}
+              <tr>
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <div class="flex items-center">
+                    <div class="flex-shrink-0 h-10 w-10">
+                      <img class="h-10 w-10 rounded-full object-cover" src="{{item.product.imageURL}}" alt="{{item.product.name}}">
+                    </div>
+                    <div class="ml-4">
+                      <div class="text-sm font-medium text-gray-900">{{item.product.name}}</div>
+                    </div>
+                  </div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{item.product.price|floatformat:2}} Fcfa</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{item.quantity}}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+
+        <div class="mt-6 border-t border-gray-200 pt-4">
+          <div class="flex justify-between text-lg font-semibold">
+            <span>Items:</span>
+            <span>{{order.get_cart_items}}</span>
+          </div>
+          <div class="flex justify-between text-xl font-bold mt-2">
+            <span>Total:</span>
+            <span class="text-green-600">{{order.get_cart_total|floatformat:2}} Fcfa</span>
+          </div>
+        </div>
       </div>
-    </form>
-    <br>
-    <!-- Payement option -->
-    <div class="box-element" id="payment-info">
-      <small>Paypal Options</small>
-      <!--<button id="make-payment">Make payment</button>-->
-      <div id="paypal-button-container"></div>
+    </div>
+    
+    <!-- Left Column - Form -->
+    <div class="lg:w-1/2">
+      <form id="form" class="bg-white rounded-lg shadow-lg p-6">
+        <h2 class="text-2xl font-bold mb-6 text-gray-800">Customer Information</h2>
+        
+        <!-- User Info (for guests) -->
+        <div id="user-info" class="mb-6">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label for="name" class="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
+              <input type="text" id="name" name="name" required 
+                     class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500">
+            </div>
+            <div>
+              <label for="email" class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+              <input type="email" id="email" name="email" required 
+                     class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500">
+            </div>
+          </div>
+        </div>
+
+        <!-- Shipping Info -->
+        <div id="shipping-info">
+          <h3 class="text-lg font-semibold mb-4 text-gray-700">Shipping Information</h3>
+          <div class="space-y-4">
+            <div>
+              <label for="address" class="block text-sm font-medium text-gray-700 mb-1">Address</label>
+              <input type="text" id="address" name="address" 
+                     class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500">
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label for="city" class="block text-sm font-medium text-gray-700 mb-1">City</label>
+                <input type="text" id="city" name="city" 
+                       class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500">
+              </div>
+              <div>
+                <label for="state" class="block text-sm font-medium text-gray-700 mb-1">State</label>
+                <input type="text" id="state" name="state" 
+                       class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500">
+              </div>
+            </div>
+            <div>
+              <label for="zipcode" class="block text-sm font-medium text-gray-700 mb-1">Zip Code</label>
+              <input type="text" id="zipcode" name="zipcode" 
+                     class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500">
+            </div>
+          </div>
+        </div>
+
+        <button type="submit" id="form-button" 
+                class="mt-6 w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-4 rounded-lg transition duration-200">
+          Continue to Payment
+        </button>
+      </form>
+
+      <!-- Payment Info (hidden initially) -->
+      <div id="payment-info" class="hidden mt-6 bg-white rounded-lg shadow-lg p-6">
+        <h3 class="text-xl font-bold mb-4 text-gray-800">Payment Options</h3>
+        <p class="text-sm text-gray-600 mb-4">Secure payment with PayPal</p>
+        <div id="paypal-button-container" class="mt-4"></div>
+      </div>
     </div>
   </div>
-  <!-- right  block -->
-  <div class="border-2 p-4 shadow-xl">
-   <div>
-     <a href="{% url 'cart' %}" class="hover:bg-green-600 underline"
-       >&#x2190; Back to Cart</a
-     >
-     <hr class="my-2" />
-     <h3 class="my-4">Order Summary</h3>
-     <hr />
-
-     <!-- ----------------------------------------------------------------------------------------------------- -->
-     
-     <div class="">
-       <table class="table">
-              <!-- head -->
-              <thead>
-                <tr>
-                  <th>
-                  </th>
-                  <th>Name</th>
-                  <th>Price</th>
-                  <th>Quantity</th>
-                </tr>
-              </thead>
-              {% for item in items %}
-              <tbody>
-                <!-- Table right body -->
-                <tr>
-                  <th>
-                  </th>
-                  <td>
-                    <div class="flex items-center gap-3">
-                      <div class="avatar">
-                        <div class="mask mask-squircle h-12 w-12">
-                          <img
-                            src="{{item.product.imageURL}}"
-                            alt="Avatar Tailwind CSS Component" />
-                        </div>
-                      </div>
-                      <div>
-                        <div class="font-bold"> {{item.product.name}} </div>
-                      </div>
-                    </div>
-                  </td>
-                  <td>
-                    <span class="badge badge-ghost badge-sm">{{item.product.price}}</span>
-                  </td>
-                  <td><span> {{item.quantity}} </span></td>
-                  <th>
-                  </th>
-                </tr>
-              </tbody>
-              {% endfor %}
-        </table>
-      </div>
-      
-     </div>
-     <h5>Item : {{order.get_cart_items}} </h5>
-     <h5>Total = {{order.get_cart_total}} Fcfa </h5>
-   </div>
- </div>
 </div>
-
 
 <!-- Include the PayPal JavaScript SDK -->
 <script src="https://www.paypal.com/sdk/js?client-id=AVoD_U5AQkEs4xESC60qErEdPebZ3jQiOFLEW5nPc-J0oV-YKEA0uG0SGU9yLVXXKT7Na6wvtYYZbeNC&currency=USD"></script>
+
 <script>
-  var total = '{{order.get_cart_total}}'
-      // Render the PayPal button into #paypal-button-container
-      paypal.Buttons({
+  var shipping = '{{order.shipping}}';
+  var total = '{{order.get_cart_total|floatformat:2}}';
+  var userAuthenticated = '{{request.user.is_authenticated}}' === 'True';
 
-        style: {
-              color:  'blue',
-              shape:  'rect',
-          },
+  // Hide shipping info if not needed
+  if (shipping === 'False') {
+    document.getElementById('shipping-info').style.display = 'none';
+  }
 
-          // Set up the transaction
-          createOrder: function(data, actions) {
-              return actions.order.create({
-                  purchase_units: [{
-                      amount: {
-                          value:parseFloat(total).toFixed(2)
-                      }
-                  }]
-              });
-          },
+  // Hide user info if user is authenticated
+  if (userAuthenticated) {
+    document.getElementById('user-info').style.display = 'none';
+  }
 
-          // Finalize the transaction
-          onApprove: function(data, actions) {
-              return actions.order.capture().then(function(details) {
-                  // Show a success message to the buyer
-                  submitFormData()
-              });
+  // If no shipping needed and user is authenticated, show payment directly
+  if (shipping === 'False' && userAuthenticated) {
+    document.getElementById('form-wrapper').classList.add("hidden");
+    document.getElementById('payment-info').classList.remove("hidden");
+  }
+
+  // Form submission handler
+  document.getElementById('form').addEventListener('submit', function(e) {
+    e.preventDefault();
+    document.getElementById('form-button').classList.add("hidden");
+    document.getElementById('payment-info').classList.remove("hidden");
+    window.scrollTo({
+      top: document.getElementById('payment-info').offsetTop - 20,
+      behavior: 'smooth'
+    });
+  });
+
+  function submitFormData() {
+    var form = document.getElementById('form');
+    var userFormData = {
+      'name': null,
+      'email': null,
+      'total': total
+    };
+
+    var shippingInfo = {
+      'address': null,
+      'city': null,
+      'state': null,
+      'zipcode': null
+    };
+    
+    if (shipping !== 'False') {
+      shippingInfo.address = form.address.value;
+      shippingInfo.city = form.city.value;
+      shippingInfo.state = form.state.value;
+      shippingInfo.zipcode = form.zipcode.value;
+    }
+
+    if (!userAuthenticated) {
+      userFormData.name = form.name.value;
+      userFormData.email = form.email.value;
+    }
+
+    // Send data to server
+    fetch('/process_order/', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': '{{ csrf_token }}',
+      },
+      body: JSON.stringify({'form': userFormData, 'shipping': shippingInfo}),
+    })
+    .then(response => response.json())
+    .then(data => {
+      console.log('Success:', data);
+      // Handle success response
+    })
+    .catch(error => {
+      console.error('Error:', error);
+    });
+  }
+
+  // PayPal button configuration
+  paypal.Buttons({
+    style: {
+      color: 'blue',
+      shape: 'rect',
+      label: 'pay',
+      height: 40
+    },
+    createOrder: function(data, actions) {
+      return actions.order.create({
+        purchase_units: [{
+          amount: {
+            value: parseFloat(total).toFixed(2)
           }
-
-      }).render('#paypal-button-container');
-  </script>
-
-
-
+        }]
+      });
+    },
+    onApprove: function(data, actions) {
+      return actions.order.capture().then(function(details) {
+        submitFormData();
+        alert('Transaction completed by ' + details.payer.name.given_name);
+        window.location.href = "{% url 'index' %}";
+      });
+    }
+  }).render('#paypal-button-container');
+</script>
 {% endblock %}

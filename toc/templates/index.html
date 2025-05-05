@@ -30,10 +30,11 @@
         
         <!-- Action Buttons -->
         <div class="flex flex-col sm:flex-row gap-3 mt-4">
-          <button 
+          <button
+            type="button"
             data-product="{{product.id}}" 
             data-action="add" 
-            class="add-btn update-cart bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-md transition-colors flex-1 flex items-center justify-center">
+            class="update-cart bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-md transition-colors flex-1 flex items-center justify-center">
             Ajouter au panier
           </button>
           <button class="border border-gray-300 hover:bg-gray-100 text-gray-700 font-medium py-2 px-4 rounded-md transition-colors flex-1">
@@ -112,7 +113,7 @@
           emptyState.style.display = 'block';
         }
       {% endif %}
-    }, 1200); // Temps de chargement simulé: 1.2 secondes
+    }, 300); // Temps de chargement simulé
   });
 </script>
 

@@ -58,36 +58,31 @@ def checkout(request):
 
 
 # Update items 
-def updateItem(request):
+def update_item(request):
     data = json.loads(request.body)
-    productId = data['productId']
-    action  = data['action']
-    print('action', action)
-    print('productid', productId)
-    
-    # Vérifier si l'utilisateur est authentifié avant d'accéder à `customer`
-    if request.user.is_authenticated:
-        customer = request.user.customer
-    else:
-        return JsonResponse({'error': 'User not authenticated'}, status=401)
+    product_id = data['productId']
+    action = data['action']
     
     customer = request.user.customer
-    product = Product.objects.get(id=productId)
+    product = Product.objects.get(id=product_id)
     order, created = Order.objects.get_or_create(customer=customer, complete=False)
     
-    orderItem, created = OrderItem.objects.get_or_create(order=order, product=product)
+    order_item, created = OrderItem.objects.get_or_create(order=order, product=product)
+    
     if action == 'add':
-        orderItem.quantity = (orderItem.quantity + 1)
+        order_item.quantity += 1
     elif action == 'remove':
-        orderItem.quantity = (orderItem.quantity - 1)
+        order_item.quantity -= 1
     
-    orderItem.save()
+    order_item.save()
     
-    if orderItem.quantity <= 0:
-        orderItem.delete()
-        
-        
-    return JsonResponse('item was added', safe=False)
+    if order_item.quantity <= 0:
+        order_item.delete()
+    
+    # Retourne le nombre total d'articles dans le panier
+    cart_items = sum([item.quantity for item in order.orderitem_set.all()])
+    
+    return JsonResponse({'cartItems': cart_items}, safe=False)
 
 
 # Viw for POST request to send data too.
@@ -205,6 +200,10 @@ class ContactForm(forms.Form):
 
 # Contact viw
 def contact(request):
+    # Les elements de la carte 
+    data = cartData(request)
+    cartItems = data['cartItems']
+    
     if request.method == 'POST':
         form = ContactForm(request.POST)
         if form.is_valid():
@@ -231,8 +230,13 @@ def contact(request):
             return redirect('contact')  # Rediriger vers la même page
     else:
         form = ContactForm()
+        
+    context = {
+        'form':form,
+        'cartItems':cartItems
+    }
     
-    return render(request, 'contact.html', {'form': form})
+    return render(request, 'contact.html', context)
 
 # Product view
 def product(request):

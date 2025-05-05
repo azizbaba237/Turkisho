@@ -7,8 +7,31 @@
     <title>Document</title>
     {% load static %} 
     {% tailwind_css %} <!-- Load Tailwind CSS -->
-  </head>
-  <body>
+
+    <!-- AJOUTEZ CE BLOC DE SCRIPT DANS LA SECTION HEAD -->
+    <script type="text/javascript">
+      // Cette variable permet d'identifier si l'utilisateur est connecté ou non
+      var user = '{{ request.user }}';
+
+      // Fonction pour récupérer les cookies (pour le CSRF token)
+      function getCookie(name) {
+          let cookieValue = null;
+          if (document.cookie && document.cookie !== '') {
+              const cookies = document.cookie.split(';');
+              for (let i = 0; i < cookies.length; i++) {
+                  const cookie = cookies[i].trim();
+                  if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                      cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                      break;
+                  }
+              }
+          }
+          return cookieValue;
+      }
+  </script>
+  <!-- FIN DU BLOC À AJOUTER -->
+</head>
+<body>
     <!-- Navbar -->
     {% include 'nav.html' %}
 
@@ -18,8 +41,10 @@
       {% endblock %}
     </div>
 
-    
+    <!-- Footer -->
+    {% include 'footer.html' %}
 
+    <!-- Scripts - Placés à la fin du document pour un chargement plus rapide -->
     <script type="text/javascript">
       // Define the current user
       var user = {
@@ -60,7 +85,7 @@
       }
     
       // Get or create the 'cart' cookie
-      var cart = JSON.parse(getCookie('cart') || {})
+      var cart = JSON.parse(getCookie('cart') || '{}');
       console.log('Cart:', cart);
     
       // If the cart is empty, initialize the cookie
@@ -70,12 +95,10 @@
       }
     </script>
 
-  <!-- Load the cart.js file after defining the variables -->
-  <script type="text/javascript" src="{% static 'js/cart.js' %}"></script>
-
-  <!-- Footer -->
-  {% include 'footer.html' %}
-
-  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <!-- IMPORTANT: Chargez Alpine.js avant vos autres scripts -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    
+    <!-- Chargez vos scripts JavaScript après la définition des variables -->
+    <script type="text/javascript" src="{% static 'js/cart.js' %}"></script>
   </body>
 </html>
