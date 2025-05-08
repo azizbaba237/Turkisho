@@ -1,145 +1,287 @@
-{% extends "base.html" %}
-{% load static %}
+{% extends "base.html" %} {% load static %} {% block content %}
+<script>
+  // Définir l'URL de l'image placeholder globalement
+  const PLACEHOLDER_IMAGE_URL = "{% static 'images/placeholder.png' %}";
+</script>
 
-{% block content %}
 <div x-data="productPage()" x-init="init()">
-    <div class="container mx-auto px-4 py-4 sm:py-8">
-        <h1 class="text-2xl sm:text-3xl font-bold text-center mb-4 sm:mb-8">Nos Produits</h1>
+  <div class="container mx-auto px-4 py-4 sm:py-8">
+    <h1 class="text-2xl sm:text-3xl font-bold text-center mb-4 sm:mb-8">
+      Nos Produits
+    </h1>
 
-        <!-- Barre de recherche -->
-        <div class="mb-4 sm:mb-6 max-w-md mx-auto">
-            <div class="relative">
-                <input 
-                    type="text" 
-                    x-model="searchTerm" 
-                    placeholder="Rechercher un produit..." 
-                    class="w-full px-4 py-2 text-sm sm:text-base border rounded-lg pl-10"
-                >
-                <svg class="absolute left-3 top-2.5 sm:top-3 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-                </svg>
-            </div>
-        </div>
+    <!-- Barre de recherche -->
+    <div class="mb-4 sm:mb-6 max-w-md mx-auto">
+      <div class="relative">
+        <input
+          type="text"
+          x-model="searchTerm"
+          placeholder="Rechercher un produit..."
+          class="w-full px-4 py-2 text-sm sm:text-base border rounded-lg pl-10"
+        />
+        <svg
+          class="absolute left-3 top-2.5 sm:top-3 w-5 h-5 text-gray-400"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+          ></path>
+        </svg>
+      </div>
+    </div>
 
-        <!-- Navigation des catégories -->
-        <div class="mb-6 overflow-x-auto pb-2">
-            <div class="flex space-x-2 sm:space-x-4 w-max mx-auto px-2 sm:px-0">
-                <template x-for="categorie in categories_list" :key="categorie">
-                    <button 
-                        @click="selectCategory(categorie)"
-                        :class="{ 
+    <!-- Navigation des catégories -->
+    <div class="mb-6 overflow-x-auto pb-2">
+      <div class="flex space-x-2 sm:space-x-4 w-max mx-auto px-2 sm:px-0">
+        <template x-for="categorie in categories_list" :key="categorie">
+          <button
+            @click="selectCategory(categorie)"
+            :class="{ 
                             'bg-blue-500 text-white': activeCategory === categorie, 
                             'bg-gray-200 text-gray-700': activeCategory !== categorie 
                         }"
-                        class="px-3 py-1 sm:px-4 sm:py-2 text-sm sm:text-base rounded-lg transition-colors whitespace-nowrap"
-                        x-text="formatCategorie(categorie)"
-                    >
-                    </button>
-                </template>
+            class="px-3 py-1 sm:px-4 sm:py-2 text-sm sm:text-base rounded-lg transition-colors whitespace-nowrap"
+            x-text="formatCategorie(categorie)"
+          ></button>
+        </template>
 
-                <!-- Skeleton pour les boutons catégories pendant le chargement -->
-                <template x-if="loading">
-                    <div class="flex space-x-2 sm:space-x-4">
-                        <div class="w-20 sm:w-24 h-8 sm:h-10 bg-gray-300 rounded-lg animate-pulse"></div>
-                        <div class="w-24 sm:w-32 h-8 sm:h-10 bg-gray-300 rounded-lg animate-pulse"></div>
-                        <div class="w-20 sm:w-28 h-8 sm:h-10 bg-gray-300 rounded-lg animate-pulse"></div>
-                    </div>
-                </template>
-            </div>
-        </div>
-
-        <!-- Grille des produits -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6" x-show="!loading">
-            <template x-for="product in filteredProducts" :key="product.id">
-                <div class="bg-white border rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow">
-                    <img 
-                        :src="product.image ? '/media/' + product.image : '{% static 'images/placeholder.png' %}'"
-                        :alt="product.name" 
-                        class="w-full h-40 sm:h-48 object-cover"
-                    >
-                    <div class="p-3 sm:p-4">
-                        <h3 x-text="product.name" class="text-lg sm:text-xl font-semibold mb-1 sm:mb-2"></h3>
-                        <p x-text="`${product.price.toFixed(2)} €`" class="text-blue-600 font-bold text-base sm:text-lg"></p>
-                        <button class="mt-2 sm:mt-4 w-full bg-blue-500 text-white py-1 sm:py-2 text-sm sm:text-base rounded-lg hover:bg-blue-600 transition-colors">
-                            Ajouter au Panier
-                        </button>
-                    </div>
-                </div>
-            </template>
-        </div>
-        
-        <!-- Skeletons pour les produits pendant le chargement -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6" x-show="loading">
-            <template x-for="i in 6">
-                <div class="bg-white border rounded-lg shadow-md overflow-hidden animate-pulse">
-                    <div class="w-full h-40 sm:h-48 bg-gray-300"></div>
-                    <div class="p-3 sm:p-4">
-                        <div class="h-5 sm:h-6 bg-gray-300 rounded w-3/4 mb-1 sm:mb-2"></div>
-                        <div class="h-5 sm:h-6 bg-gray-300 rounded w-1/4 mb-2 sm:mb-4"></div>
-                        <div class="h-8 sm:h-10 bg-gray-300 rounded w-full mt-2 sm:mt-4"></div>
-                    </div>
-                </div>
-            </template>
-        </div>
-        
-        <!-- Message quand aucun produit n'est trouvé -->
-        <div x-show="!loading && filteredProducts.length === 0" class="text-center py-6 sm:py-10">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-12 sm:h-16 w-12 sm:w-16 mx-auto text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-            <p class="mt-2 sm:mt-4 text-base sm:text-lg text-gray-600">Aucun produit trouvé pour cette recherche.</p>
-        </div>
+        <!-- Skeleton pour les boutons catégories pendant le chargement -->
+        <template x-if="loading">
+          <div class="flex space-x-2 sm:space-x-4">
+            <div
+              class="w-20 sm:w-24 h-8 sm:h-10 bg-gray-300 rounded-lg animate-pulse"
+            ></div>
+            <div
+              class="w-24 sm:w-32 h-8 sm:h-10 bg-gray-300 rounded-lg animate-pulse"
+            ></div>
+            <div
+              class="w-20 sm:w-28 h-8 sm:h-10 bg-gray-300 rounded-lg animate-pulse"
+            ></div>
+          </div>
+        </template>
+      </div>
     </div>
 
-    <script>
-        function productPage() {
-            return {
-                products: {{ produits_json|safe }},
-                categories_list: {{ categories_list|safe }},
-                activeCategory: 'interrupteurs',
-                searchTerm: '',
-                loading: true,
-                
-                init() {
-                    console.log('Page produits initialisée');
-                    console.log('Products:', this.products);
-                    console.log('Categories:', this.categories_list);
-                    
-                    // Simuler un temps de chargement
-                    setTimeout(() => {
-                        this.loading = false;
-                    }, 1200);
-                },
-                
-                selectCategory(category) {
-                    // Réactiver le chargement lors du changement de catégorie
-                    this.loading = true;
-                    this.activeCategory = category;
-                    
-                    // Simuler un petit délai lors du changement de catégorie
-                    setTimeout(() => {
-                        this.loading = false;
-                    }, 500);
-                },
-                
-                formatCategorie(categorie) {
-                    const mapping = {
-                        'interrupteurs': 'Interrupteurs',
-                        'sanitaires': 'Produits Sanitaires',
-                        'pomelles': 'Pomelles',
-                        'cabines_douche': 'Cabines de Douche'
-                    };
-                    return mapping[categorie] || categorie;
-                },
-                
-                get filteredProducts() {
-                    return this.products.filter(product => 
-                        product.categorie__name === this.activeCategory &&
-                        product.name.toLowerCase().includes(this.searchTerm.toLowerCase())
-                    );
+    <!-- Notification d'ajout au panier -->
+    <div
+      x-show="showNotification"
+      x-transition:enter="transition ease-out duration-300"
+      x-transition:enter-start="opacity-0 transform translate-y-2"
+      x-transition:enter-end="opacity-100 transform translate-y-0"
+      x-transition:leave="transition ease-in duration-300"
+      x-transition:leave-start="opacity-100 transform translate-y-0"
+      x-transition:leave-end="opacity-0 transform translate-y-2"
+      class="fixed bottom-4 right-4 bg-green-500 text-white px-4 py-2 rounded-lg shadow-lg z-50"
+    >
+      Produit ajouté au panier!
+    </div>
+
+    <!-- Grille des produits -->
+    <div
+      class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6"
+      x-show="!loading"
+    >
+      <template x-for="product in filteredProducts" :key="product.id">
+        <div
+          class="bg-white border rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow"
+        >
+          <img
+            :src="product.image ? '/media/' + product.image : PLACEHOLDER_IMAGE_URL"
+            :alt="product.name"
+            class="w-full h-40 sm:h-48 object-cover"
+          />
+          <div class="p-3 sm:p-4">
+            <h3
+              x-text="product.name"
+              class="text-lg sm:text-xl font-semibold mb-1 sm:mb-2"
+            ></h3>
+            <p
+              x-text="`${product.price.toFixed(2)} €`"
+              class="text-blue-600 font-bold text-base sm:text-lg"
+            ></p>
+            <button
+              @click="addToCart(product.id)"
+              class="mt-2 sm:mt-4 w-full bg-blue-500 text-white py-1 sm:py-2 text-sm sm:text-base rounded-lg hover:bg-blue-600 transition-colors"
+            >
+              Ajouter au Panier
+            </button>
+          </div>
+        </div>
+      </template>
+    </div>
+
+    <!-- Skeletons pour les produits pendant le chargement -->
+    <div
+      class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6"
+      x-show="loading"
+    >
+      <template x-for="i in 6">
+        <div
+          class="bg-white border rounded-lg shadow-md overflow-hidden animate-pulse"
+        >
+          <div class="w-full h-40 sm:h-48 bg-gray-300"></div>
+          <div class="p-3 sm:p-4">
+            <div
+              class="h-5 sm:h-6 bg-gray-300 rounded w-3/4 mb-1 sm:mb-2"
+            ></div>
+            <div
+              class="h-5 sm:h-6 bg-gray-300 rounded w-1/4 mb-2 sm:mb-4"
+            ></div>
+            <div
+              class="h-8 sm:h-10 bg-gray-300 rounded w-full mt-2 sm:mt-4"
+            ></div>
+          </div>
+        </div>
+      </template>
+    </div>
+
+    <!-- Message quand aucun produit n'est trouvé -->
+    <div
+      x-show="!loading && filteredProducts.length === 0"
+      class="text-center py-6 sm:py-10"
+    >
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        class="h-12 sm:h-16 w-12 sm:w-16 mx-auto text-gray-400"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke="currentColor"
+      >
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+        />
+      </svg>
+      <p class="mt-2 sm:mt-4 text-base sm:text-lg text-gray-600">
+        Aucun produit trouvé pour cette recherche.
+      </p>
+    </div>
+  </div>
+
+  <script>
+    function productPage() {
+        return {
+            products: {{ produits_json|safe }},
+            categories_list: {{ categories_list|safe }},
+            activeCategory: 'interrupteurs',
+            searchTerm: '',
+            loading: true,
+            showNotification: false,
+            cartCount: {{ cartItems }},
+
+            init() {
+                console.log('Page produits initialisée');
+                console.log('Products:', this.products);
+                console.log('Categories:', this.categories_list);
+
+                // Simuler un temps de chargement
+                setTimeout(() => {
+                    this.loading = false;
+                }, 1200);
+            },
+
+            selectCategory(category) {
+                // Réactiver le chargement lors du changement de catégorie
+                this.loading = true;
+                this.activeCategory = category;
+
+                // Simuler un petit délai lors du changement de catégorie
+                setTimeout(() => {
+                    this.loading = false;
+                }, 500);
+            },
+
+            formatCategorie(categorie) {
+                const mapping = {
+                    'interrupteurs': 'Interrupteurs',
+                    'sanitaires': 'Produits Sanitaires',
+                    'pomelles': 'Pomelles',
+                    'cabines_douche': 'Cabines de Douche'
+                };
+                return mapping[categorie] || categorie;
+            },
+
+            addToCart(productId) {
+                // Récupérer le token CSRF
+                const csrftoken = this.getCookie('csrftoken');
+
+                // Envoyer les données au serveur en utilisant la vue update_item existante
+                fetch('/update_item/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': csrftoken
+                    },
+                    body: JSON.stringify({
+                        productId: productId,
+                        action: 'add'
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    console.log('Réponse du serveur:', data);
+
+                    // Mettre à jour le compteur du panier
+                    if (data.cartItems) {
+                        this.cartCount = data.cartItems;
+
+                        // Mettre à jour l'affichage du compteur dans la navbar
+                        const cartCountElement = document.querySelector('.absolute.bg-red-500');
+                        if (cartCountElement) {
+                            cartCountElement.textContent = data.cartItems;
+                        }
+                    }
+
+                    // Afficher la notification
+                    this.showAddNotification();
+                })
+                .catch(error => {
+                    console.error('Erreur lors de la mise à jour du panier:', error);
+                });
+            },
+
+            getCookie(name) {
+                // Fonction pour récupérer un cookie par son nom
+                let cookieValue = null;
+                if (document.cookie && document.cookie !== '') {
+                    const cookies = document.cookie.split(';');
+                    for (let i = 0; i < cookies.length; i++) {
+                        const cookie = cookies[i].trim();
+                        if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                            break;
+                        }
+                    }
                 }
+                return cookieValue;
+            },
+
+            showAddNotification() {
+                // Afficher la notification
+                this.showNotification = true;
+
+                // Cacher la notification après 3 secondes
+                setTimeout(() => {
+                    this.showNotification = false;
+                }, 3000);
+            },
+
+            get filteredProducts() {
+                return this.products.filter(product =>
+                    product.categorie__name === this.activeCategory &&
+                    product.name.toLowerCase().includes(this.searchTerm.toLowerCase())
+                );
             }
         }
-    </script>
+    }
+  </script>
 </div>
 {% endblock %}
