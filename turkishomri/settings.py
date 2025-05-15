@@ -39,12 +39,15 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'toc',
     'tailwind',
+    'turkisho_tailwind',
     'theme',
     'django_browser_reload',
 ]
 
 # Tailwind config
-TAILWIND_APP_NAME = 'theme'
+TAILWIND_APP_NAME = 'turkisho_tailwind',
+# En production, désactivez le mode développement de Tailwind
+TAILWIND_DEV_MODE = False
 INTERNAL_IPS = [
     "127.0.0.1",
 ]
